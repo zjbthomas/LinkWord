@@ -3,6 +3,8 @@ import re
 import random
 
 MAX_TRIALS = 10
+CHECK_COMMON = True
+FREQUENCY_THRESHOLD = 0
 
 def is_valid_trail(trial, valid_words, cur_word):
     # check if trial in valid word list
@@ -22,11 +24,24 @@ def is_valid_trail(trial, valid_words, cur_word):
     
     return True
 
+def is_common_word(word, common_chars):
+    if (not CHECK_COMMON): return True
+
+    assert len(word) == 2
+
+    return word[0] in common_chars and word[1] in common_chars
+
 # read json
+with open('char_common.json', 'r', encoding='UTF-8') as f:
+    data = json.load(f)
+
+common_chars = [d['char'] for d in data if d['frequency'] <= FREQUENCY_THRESHOLD]
+
 with open('word.json', 'r', encoding='UTF-8') as f:
     data = json.load(f)
 
-valid_words = [w for w in (d['word'] for d in data) if re.fullmatch(r'[\u4e00-\u9fff]{2}', w) is not None]
+valid_words = [w for w in (d['word'] for d in data)
+               if (re.fullmatch(r'[\u4e00-\u9fff]{2}', w) is not None and is_common_word(w, common_chars))]
 
 # start the game
 start_word, end_word = random.sample(valid_words, 2)
